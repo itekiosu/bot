@@ -7,7 +7,9 @@ import string
 class itekiBot(discord.Client):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
-
+        
+    @commands.command()
+    @commands.has_permissions(administrator=True)
     async def on_message(self, message):
         db = cmyui.AsyncSQLPool()
         await db.connect(glob.config.mysql)
