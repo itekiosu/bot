@@ -30,10 +30,10 @@ async def accept(ctx):
     db = cmyui.AsyncSQLPool()
     await db.connect(glob.config.mysql)
     mention = ctx.message.mentions
+    await ctx.message.delete()
     for user in mention:
         key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
         await db.execute(f'INSERT INTO beta_keys(beta_key, generated_by) VALUES ("{key}", "{ctx.author}")')
-        await ctx.message.delete()
         await user.send(f'Key generated!\n\nKey: `{key}`')
         role = discord.utils.get(user.guild.roles, name=glob.config.beta_role)
         await user.add_roles(role)
