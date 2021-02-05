@@ -1,24 +1,30 @@
 import cmyui
 import glob
-import discord
+from discord.ext import commands
+import discord.utils
 import random
 import string
 
-class itekiBot(discord.Client):
-    async def on_ready(self):
-        print(f'Logged in as {self.user}')
-        
-    async def on_message(self, message):
-        db = cmyui.AsyncSQLPool()
-        await db.connect(glob.config.mysql)
-        if message.author.id == self.user.id:
-            return
-        
-        if message.content.startswith('!generate') and message.channel.id == glob.config.generate_channel:
-            key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
-            await db.execute(f'INSERT INTO beta_keys(beta_key, generated_by) VALUES ("{key}", "{message.author}")')
-            await message.delete()
-            return await message.author.send(f'Key generated!\n\nKey: `{key}`')
+db = cmyui.AsyncSQLPool()
+await db.connect(glob.config.mysql)
+client = commands.Bot(command_prefix=glob.config.prefix)
 
-client = itekiBot()
+@client.command()
+async def generate(ctx):
+    if ctx.channel.id == glob.config.generate_channel:
+        key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
+        await db.execute(f'INSERT INTO beta_keys(beta_key, generated_by) VALUES ("{key}", "{ctx.author}")')
+        await ctx.delete()
+        return await ctx.author.send(f'Key generated!\n\nKey: `{key}`')
+
+@client.command()
+async def accept(ctx):
+    mention = ctx.message.mentions
+    for user in mention:
+        key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
+        await db.execute(f'INSERT INTO beta_keys(beta_key, generated_by) VALUES ("{key}", "{ctx.author}")')
+        await ctx.delete()
+        await user.send(f'Key generated!\n\nKey: `{key}`')
+        await user.add_roles('Beta Tester')
+
 client.run(glob.config.token)
