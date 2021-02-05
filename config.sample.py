@@ -8,3 +8,5 @@ mysql = {
 token = ''
 generate_channel = ''
 prefix = ''
+beta_role = ''
+member_role = ''
