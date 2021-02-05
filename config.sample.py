@@ -7,3 +7,4 @@ mysql = {
 
 token = ''
 generate_channel = ''
+prefix = ''
