@@ -69,8 +69,12 @@ async def avatar(ctx, url: str = None):
 @bot.command()
 async def link(ctx):
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
-    await db.execute(f'INSERT INTO discord (tag, user, code) VALUES ("{ctx.author}", 0, "{code}")')
+    e = await db.fetch(f'SELECT 1 FROM discord WHERE tag = "{ctx.author}"')
     await ctx.message.delete()
-    return await ctx.author.send(f'Linking account initiated!\n\nTo finalise the process, please login ingame and send this command to Ruji:\n`!link {code}`')
+    if not e:
+        await db.execute(f'INSERT INTO discord (tag, user, code) VALUES ("{ctx.author}", 0, "{code}")')
+        return await ctx.author.send(f'Linking account initiated!\n\nTo finalise the process, please login ingame and send this command to Ruji:\n`!link {code}`')
+    else:
+        return await ctx.author.send("Your Discord is already linked to an Iteki account! If you think this is in error, please DM mbruhyo#8551 on Discord.")
 
 bot.run(glob.config.token)
