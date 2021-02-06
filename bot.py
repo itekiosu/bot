@@ -65,6 +65,8 @@ async def avatar(ctx, url: str = None):
                 e = await db.fetch(f'SELECT name FROM users WHERE id = {uid}')
                 uname = e['name']
                 return await ctx.send(f'Ok **{uname}**, your avatar has been changed! Please restart your game for it to update.')
+            else:
+                return await ctx.send(f'Error getting image! If you provided a URL, please ensure that anyone has the permission to view this image.')
 
 @bot.command()
 async def link(ctx):
