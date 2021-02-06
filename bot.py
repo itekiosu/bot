@@ -53,7 +53,7 @@ async def avatar(ctx, url: str = None):
         if a['user'] != 0:
             uid = a['user']
         else:
-            return await ctx.send('Your Discord is not linked to any Iteki account! Please do `!link` to link your Iteki account and try again.')
+            return await ctx.send("You haven't finished the linking process! Please check your DMs with @Iteki#5497 and follow the instructions to finish the linking process, then try again.")
     else:
         return await ctx.send('Your Discord is not linked to any Iteki account! Please do `!link` to link your Iteki account and try again.')
     async with aiohttp.ClientSession() as session:
