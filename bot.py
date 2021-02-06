@@ -1,12 +1,14 @@
 import cmyui
 import glob
 from discord.ext import commands
+from PIL import Image
 import discord.utils
 import discord
 import random
 import string
 import aiohttp
 import aiofiles
+from resizeimage import resizeimage
 
 intents = discord.Intents.all()
 intents.members = True
@@ -62,6 +64,12 @@ async def avatar(ctx, url: str = None):
                 file = await aiofiles.open(f'/home/iteki/gulag/.data/avatars/{uid}.png', 'wb')
                 await file.write(await res.read())
                 await file.close()
+                img = Image.open(f'/home/iteki/gulag/.data/avatars/{uid}.png')
+                size = 256, 256
+                width, height = img.size
+                if width > 256 or height > 256:
+                    new = resizeimage.resize_cover(img, [256, 256])
+                    new.save(f'/home/iteki/gulag/.data/avatars/{uid}.png', img.format)
                 e = await db.fetch(f'SELECT name FROM users WHERE id = {uid}')
                 uname = e['name']
                 return await ctx.send(f'Ok **{uname}**, your avatar has been changed! Please restart your game for it to update.')
