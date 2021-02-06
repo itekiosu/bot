@@ -6,7 +6,10 @@ mysql = {
 }
 
 token = ''
-generate_channel = ''
 prefix = ''
 beta_role = ''
 member_role = ''
+admin_role_id = 2334234234234234234234
+dev_role_id = 345345345345345345345345345
+owner_role_id = 345345345345345345345345353535
+webhook = ''
