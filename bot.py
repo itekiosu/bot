@@ -94,7 +94,7 @@ async def avatar(ctx, url: str = None):
         except:
             return await ctx.send('Please ensure you provide either an image by URL or file upload! (Syntax: `!avatar <url if you are not using image upload>`)')
     a = await db.fetch(f'SELECT user FROM discord WHERE tag_id = {ctx.author.id}')
-    if await check_link(ctx.author):
+    if await check_link(ctx.author.id):
         uid = a['user']
     else:
         return await ctx.send('Your Discord is not linked to any Iteki account! Please do `!link` to link your Iteki account and try again.')
@@ -118,7 +118,7 @@ async def avatar(ctx, url: str = None):
 @bot.command()
 async def link(ctx):
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
-    if not await check_link(ctx.author):
+    if not await check_link(ctx.author.id):
         await db.execute(f'INSERT INTO discord (tag, user, code, tag_id) VALUES ("{ctx.author}", 0, "{code}", {ctx.author.id})')
         await ctx.send('Linking initiated! Please check your DMs for further instructions.')
         return await ctx.author.send(f'To finalise the linking process, please login ingame and send this command to Ruji:\n`!link {code}`')
