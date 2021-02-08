@@ -26,7 +26,7 @@ async def get_info_id(user):
     return [e['name'], discord]
 
 async def get_info(discord):
-    f = await db.fetch(f'SELECT user FROM discord WHERE tag = "{discord}"')
+    f = await db.fetch(f'SELECT user FROM discord WHERE tag_id = {discord}')
     e = await db.fetch(f'SELECT name FROM users WHERE id = {f["id"]}')
     return [e['name'], f['id']]
 
@@ -40,9 +40,12 @@ async def get_info_name(user):
     return [e['id'], discord]
 
 async def check_link(discord):
-    e = await db.fetch(f'SELECT user FROM discord WHERE tag = "{discord}"')
-    if e and e['id'] != 0:
-        return True
+    e = await db.fetch(f'SELECT user FROM discord WHERE tag_id = {discord}')
+    if e is not None:
+        if e['user'] != 0:
+            return True
+        else:
+            return False
     else:
         return False
 
@@ -90,7 +93,7 @@ async def avatar(ctx, url: str = None):
             url = ctx.message.attachments[0].url
         except:
             return await ctx.send('Please ensure you provide either an image by URL or file upload! (Syntax: `!avatar <url if you are not using image upload>`)')
-    a = await db.fetch(f'SELECT user FROM discord WHERE tag = "{ctx.author}"')
+    a = await db.fetch(f'SELECT user FROM discord WHERE tag_id = {ctx.author.id}')
     if await check_link(ctx.author):
         uid = a['user']
     else:
@@ -115,10 +118,10 @@ async def avatar(ctx, url: str = None):
 @bot.command()
 async def link(ctx):
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
-    await ctx.message.delete()
     if not await check_link(ctx.author):
         await db.execute(f'INSERT INTO discord (tag, user, code, tag_id) VALUES ("{ctx.author}", 0, "{code}", {ctx.author.id})')
-        return await ctx.author.send(f'Linking account initiated!\n\nTo finalise the process, please login ingame and send this command to Ruji:\n`!link {code}`')
+        await ctx.send('Linking initiated! Please check your DMs for further instructions.')
+        return await ctx.author.send(f'To finalise the linking process, please login ingame and send this command to Ruji:\n`!link {code}`')
     else:
         return await ctx.author.send("Your Discord is already linked to an Iteki account! If you think this is in error, please DM @mbruhyo#8551 on Discord.")
 
@@ -185,7 +188,7 @@ async def banuser(ctx, user, reason):
     webhook_url = glob.config.webhook
     webhook = Webhook(url=webhook_url)
     embed = Embed(title = f'')
-    embed.set_author(url = f"https://iteki.pw/u/{uid}", name = p.name, icon_url = f"https://a.iteki.pw/{uid}")
+    embed.set_author(url = f"https://iteki.pw/u/{uid}", name = name, icon_url = f"https://a.iteki.pw/{uid}")
     embed.add_field(name = 'New banned user', value = f'{user} has been banned by {name} for {reason}.', inline = True)
     webhook.add_embed(embed)
     await webhook.post()
@@ -225,7 +228,7 @@ async def unbanuser(ctx, user, reason):
     webhook_url = glob.config.webhook
     webhook = Webhook(url=webhook_url)
     embed = Embed(title = f'')
-    embed.set_author(url = f"https://iteki.pw/u/{uid}", name = p.name, icon_url = f"https://a.iteki.pw/{uid}")
+    embed.set_author(url = f"https://iteki.pw/u/{uid}", name = name, icon_url = f"https://a.iteki.pw/{uid}")
     embed.add_field(name = 'New unbanned user', value = f'{user} has been unbanned by {name} for {reason}.', inline = True)
     webhook.add_embed(embed)
     await webhook.post()
@@ -236,5 +239,12 @@ async def unbanuser(ctx, user, reason):
             await user.send_message(f'Your Iteki account has been unbanned for {reason}.')
         except:
             print('Unable to message user, DMs are disabled.')
+
+
+@bot.command()
+async def minecraft(ctx):
+        role = discord.utils.get(ctx.author.guild.roles, name=glob.config.mc_role)
+        await ctx.author.add_roles(role)
+        return await ctx.send('You now have the Minecraft role! You should be able to see the Minecraft section and you will now receive pings about the server.')
 
 bot.run(glob.config.token)
