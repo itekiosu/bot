@@ -134,7 +134,7 @@ async def link(ctx):
     elif await check_link(ctx.author.id) == 0:
         return await ctx.send(f'You have already started the linking process, but have not finished it! Please check your DMs with me on Discord and follow the instructions to finish the linking process.')
     else:
-        return await ctx.send("Your Discord is already linked to an Iteki account! If you think this is in error, please DM @mbruhyo#8551 on Discord.")
+        return await ctx.send("Your Discord is already linked to an Iteki account! If you think this is in error, please DM @tsunyoku#8551 on Discord.")
 
 @bot.command()
 async def purge(ctx, amount: int = 0):
@@ -217,7 +217,7 @@ async def banuser(ctx, user, reason):
         if discord is not None:
             user = await bot.get_user(discord)
             try:
-                await user.send_message(f'Your Iteki account has been banned for {reason}. If you believe this was in error, please contact @mbruhyo#8551.')
+                await user.send_message(f'Your Iteki account has been banned for {reason}. If you believe this was in error, please contact @tsunyoku#8551.')
             except:
                 print('Unable to message user, DMs are disabled.')
     else:
