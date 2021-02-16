@@ -126,11 +126,11 @@ async def link(ctx):
     code = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
     if await check_link(ctx.author.id) is False:
         try:
-            return await ctx.author.send(f'To finalise the linking process, please login ingame and send this command to Ruji:\n`!link {code}`')
+            await ctx.author.send(f'To finalise the linking process, please login ingame and send this command to Ruji:\n`!link {code}`')
             await ctx.send('Linking initiated! Please check your DMs for further instructions.')
-            await db.execute(f'INSERT INTO discord (tag, user, code, tag_id) VALUES ("{ctx.author}", 0, "{code}", {ctx.author.id})')
+            return await db.execute(f'INSERT INTO discord (tag, user, code, tag_id) VALUES ("{ctx.author}", 0, "{code}", {ctx.author.id})')
         except:
-            await ctx.send('I was unable to DM you instructions! Please ensure you have DMs enabled and try the command again.')
+            return await ctx.send('I was unable to DM you instructions! Please ensure you have DMs enabled and try the command again.')
     elif await check_link(ctx.author.id) == 0:
         return await ctx.send(f'You have already started the linking process, but have not finished it! Please check your DMs with me on Discord and follow the instructions to finish the linking process.')
     else:
