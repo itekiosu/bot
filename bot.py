@@ -18,7 +18,7 @@ db = cmyui.AsyncSQLPool()
 
 async def get_info_id(user):
     e = await db.fetch(f'SELECT name FROM users WHERE id = {user}')
-    f = await db.fetch(f'SELECT tag_id FROM discord WHERE id = {user}')
+    f = await db.fetch(f'SELECT tag_id FROM discord WHERE user = {user}')
     if f['tag_id'] is not None:
         discord = f['tag_id']
     else:
@@ -27,12 +27,12 @@ async def get_info_id(user):
 
 async def get_info(discord):
     f = await db.fetch(f'SELECT user FROM discord WHERE tag_id = {discord}')
-    e = await db.fetch(f'SELECT name FROM users WHERE id = {f["id"]}')
-    return [e['name'], f['id']]
+    e = await db.fetch(f'SELECT name FROM users WHERE id = {f["user"]}')
+    return [e['name'], f['user']]
 
 async def get_info_name(user):
-    e = await db.fetch(f'SELECT id FROM users WHERE safe_name = {user.lower()}')
-    f = await db.fetch(f'SELECT tag_id FROM discord WHERE id = {e["id"]}')
+    e = await db.fetch(f'SELECT id FROM users WHERE safe_name = "{user.lower()}"')
+    f = await db.fetch(f'SELECT tag_id FROM discord WHERE user = {e["id"]}')
     if f['tag_id'] is not None:
         discord = f['tag_id']
     else:
@@ -47,9 +47,9 @@ async def check_link(discord):
         return False
 
 async def check_link_id(user):
-    e = await db.fetch(f'SELECT tag FROM discord WHERE id = {user}')
-    if e['tag'] is not None:
-        return e['tag']
+    e = await db.fetch(f'SELECT tag_id FROM discord WHERE user = {user}')
+    if e['tag_id'] is not None:
+        return e['tag_id']
     else:
         return False
 
@@ -189,14 +189,14 @@ async def banuser(ctx, user, reason):
         if not reason:
             return await ctx.send('You must provide a reason!')
         
-        if not await check_link(ctx.author):
+        if not await check_link(ctx.author.id):
             return await ctx.send('Your Discord is not linked to any Iteki account! Please do `!link` to link your Iteki account and try again.')
 
-        info = get_info(ctx.author)
+        info = await get_info(ctx.author.id)
         name = info[0]
         uid = info[1]
 
-        info_ban = get_info_name(user)
+        info_ban = await get_info_name(user)
         uid_ban = info_ban[0]
         if await check_link_id(uid_ban) is not False:
             discord = info_ban[1]
@@ -204,7 +204,7 @@ async def banuser(ctx, user, reason):
             discord = None
 
         await db.execute(f'UPDATE users SET priv = 2 WHERE id = {uid_ban}')
-        await db.execute(f'INSERT INTO logs (from, to, msg, time) VALUES ({uid}, {uid_ban}, {reason}, NOW())')
+        await db.execute(f'INSERT INTO logs (`from`, `to`, `msg`, `time`) VALUES ({uid}, {uid_ban}, "{reason}", NOW())')
 
         webhook_url = glob.config.webhook
         webhook = Webhook(url=webhook_url)
@@ -215,7 +215,7 @@ async def banuser(ctx, user, reason):
         await webhook.post()
 
         if discord is not None:
-            user = await bot.get_user(discord)
+            user = bot.get_user(discord)
             try:
                 await user.send_message(f'Your Iteki account has been banned for {reason}. If you believe this was in error, please contact @tsunyoku#8551.')
             except:
