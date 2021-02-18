@@ -233,7 +233,7 @@ async def banuser(ctx, user, reason):
 async def unbanuser(ctx, user, reason):
     if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
         if not user:
-            return await ctx.send('Please provide a username to ban!')
+            return await ctx.send('Please provide a username to unban!')
 
         if not reason:
             return await ctx.send('You must provide a reason!')
