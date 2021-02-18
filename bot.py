@@ -3,6 +3,7 @@ import glob
 from cmyui.discord import Webhook, Embed
 from discord.ext import commands
 from PIL import Image
+from enum import IntFlag, unique
 import discord.utils
 import discord
 import random
@@ -19,9 +20,9 @@ db = cmyui.AsyncSQLPool()
 async def get_info_id(user):
     e = await db.fetch(f'SELECT name FROM users WHERE id = {user}')
     f = await db.fetch(f'SELECT tag_id FROM discord WHERE user = {user}')
-    if f['tag_id'] is not None:
+    try:
         discord = f['tag_id']
-    else:
+    except:
         discord = None
     return [e['name'], discord]
 
@@ -33,24 +34,24 @@ async def get_info(discord):
 async def get_info_name(user):
     e = await db.fetch(f'SELECT id FROM users WHERE safe_name = "{user.lower()}"')
     f = await db.fetch(f'SELECT tag_id FROM discord WHERE user = {e["id"]}')
-    if f['tag_id'] is not None:
+    try:
         discord = f['tag_id']
-    else:
+    except:
         discord = None
     return [e['id'], discord]
 
 async def check_link(discord):
     e = await db.fetch(f'SELECT user FROM discord WHERE tag_id = {discord}')
-    if e is not None:
+    try:
         return e['user']
-    else:
+    except:
         return False
 
 async def check_link_id(user):
     e = await db.fetch(f'SELECT tag_id FROM discord WHERE user = {user}')
-    if e['tag_id'] is not None:
+    try:
         return e['tag_id']
-    else:
+    except:
         return False
 
 @bot.event
@@ -203,8 +204,12 @@ async def banuser(ctx, user, reason):
         else:
             discord = None
 
-        await db.execute(f'UPDATE users SET priv = 2 WHERE id = {uid_ban}')
-        await db.execute(f'INSERT INTO logs (`from`, `to`, `msg`, `time`) VALUES ({uid}, {uid_ban}, "{reason}", NOW())')
+        priv = await db.fetch(f'SELECT priv FROM users WHERE id = {uid_ban}')
+        priv = int(priv['priv'])
+        normal = 1 << 0
+        priv &= ~normal
+        await db.execute(f'UPDATE users SET priv = {priv} WHERE id = {uid_ban}')
+        await db.execute(f'INSERT INTO logs (`from`, `to`, `msg`, `time`) VALUES ({uid}, {uid_ban}, "Banned for {reason}", NOW())')
 
         webhook_url = glob.config.webhook
         webhook = Webhook(url=webhook_url)
@@ -213,11 +218,12 @@ async def banuser(ctx, user, reason):
         embed.add_field(name = 'New banned user', value = f'{user} has been banned by {name} for {reason}.', inline = True)
         webhook.add_embed(embed)
         await webhook.post()
+        await ctx.send(f'{user} has been banned!')
 
         if discord is not None:
             user = bot.get_user(discord)
             try:
-                await user.send_message(f'Your Iteki account has been banned for {reason}. If you believe this was in error, please contact @tsunyoku#8551.')
+                await user.send_message(f'Your Iteki account ({user}) has been banned for {reason}. If you believe this was in error, please contact @tsunyoku#8551.')
             except:
                 print('Unable to message user, DMs are disabled.')
     else:
@@ -227,27 +233,31 @@ async def banuser(ctx, user, reason):
 async def unbanuser(ctx, user, reason):
     if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
         if not user:
-            return await ctx.send('Please provide a username to unban!')
+            return await ctx.send('Please provide a username to ban!')
 
         if not reason:
             return await ctx.send('You must provide a reason!')
         
-        if not await check_link(ctx.author):
+        if not await check_link(ctx.author.id):
             return await ctx.send('Your Discord is not linked to any Iteki account! Please do `!link` to link your Iteki account and try again.')
 
-        info = get_info(ctx.author)
+        info = await get_info(ctx.author.id)
         name = info[0]
         uid = info[1]
 
-        info_ban = get_info_name(user)
+        info_ban = await get_info_name(user)
         uid_ban = info_ban[0]
         if await check_link_id(uid_ban) is not False:
             discord = info_ban[1]
         else:
             discord = None
 
-        await db.execute(f'UPDATE users SET priv = 3 WHERE id = {uid_ban}')
-        await db.execute(f'INSERT INTO logs (from, to, msg, time) VALUES ({uid}, {uid_ban}, f"Unbanned for {reason}", NOW())')
+        priv = await db.fetch(f'SELECT priv FROM users WHERE id = {uid_ban}')
+        priv = int(priv['priv'])
+        normal = 1 << 0
+        priv |= normal
+        await db.execute(f'UPDATE users SET priv = {priv} WHERE id = {uid_ban}')
+        await db.execute(f'INSERT INTO logs (`from`, `to`, `msg`, `time`) VALUES ({uid}, {uid_ban}, "Unbanned for {reason}", NOW())')
 
         webhook_url = glob.config.webhook
         webhook = Webhook(url=webhook_url)
@@ -256,16 +266,16 @@ async def unbanuser(ctx, user, reason):
         embed.add_field(name = 'New unbanned user', value = f'{user} has been unbanned by {name} for {reason}.', inline = True)
         webhook.add_embed(embed)
         await webhook.post()
+        await ctx.send(f'{user} has been unbanned!')
 
         if discord is not None:
-            user = await bot.get_user(discord)
+            user = bot.get_user(discord)
             try:
-                await user.send_message(f'Your Iteki account has been unbanned for {reason}.')
+                await user.send_message(f'Your Iteki account ({user}) has been unbanned for {reason}!')
             except:
                 print('Unable to message user, DMs are disabled.')
     else:
         return await ctx.send("You don't have permissions to do that!")
-
 
 @bot.command()
 async def minecraft(ctx):
