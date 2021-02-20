@@ -304,7 +304,7 @@ async def freezeuser(ctx, user, reason):
         await db.execute(f'UPDATE users SET frozen = 1 WHERE id = {uid_ban}')
         freezedate = datetime.now() + timedelta(7)
         timer = freezedate.timestamp()
-        await glob.db.execute(f'UPDATE users SET freezetime = {timer} WHERE id = {uid_ban}')
+        await db.execute(f'UPDATE users SET freezetime = {timer} WHERE id = {uid_ban}')
         await db.execute(f'INSERT INTO logs (`from`, `to`, `msg`, `time`) VALUES ({uid}, {uid_ban}, "Frozen for {reason}", NOW())')
 
         webhook_url = glob.config.webhook
