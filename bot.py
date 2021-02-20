@@ -11,6 +11,7 @@ import string
 import aiohttp
 import aiofiles
 from resizeimage import resizeimage
+from datetime import datetime, timedelta
 
 intents = discord.Intents.all()
 intents.members = True
@@ -272,6 +273,94 @@ async def unbanuser(ctx, user, reason):
             user = bot.get_user(discord)
             try:
                 await user.send_message(f'Your Iteki account ({user}) has been unbanned for {reason}!')
+            except:
+                print('Unable to message user, DMs are disabled.')
+    else:
+        return await ctx.send("You don't have permissions to do that!")
+
+@bot.command()
+async def freezeuser(ctx, user, reason):
+    if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
+        if not user:
+            return await ctx.send('Please provide a username to freeze!')
+
+        if not reason:
+            return await ctx.send('You must provide a reason!')
+        
+        if not await check_link(ctx.author.id):
+            return await ctx.send('Your Discord is not linked to any Iteki account! Please do `!link` to link your Iteki account and try again.')
+
+        info = await get_info(ctx.author.id)
+        name = info[0]
+        uid = info[1]
+
+        info_ban = await get_info_name(user)
+        uid_ban = info_ban[0]
+        if await check_link_id(uid_ban) is not False:
+            discord = info_ban[1]
+        else:
+            discord = None
+
+        await db.execute(f'UPDATE users SET frozen = 1 WHERE id = {uid_ban}')
+        freezedate = datetime.now() + timedelta(7)
+        timer = freezedate.timestamp()
+        await glob.db.execute(f'UPDATE users SET freezetime = {timer} WHERE id = {uid_ban}')
+        await db.execute(f'INSERT INTO logs (`from`, `to`, `msg`, `time`) VALUES ({uid}, {uid_ban}, "Frozen for {reason}", NOW())')
+
+        webhook_url = glob.config.webhook
+        webhook = Webhook(url=webhook_url)
+        embed = Embed(title = f'')
+        embed.set_author(url = f"https://iteki.pw/u/{uid}", name = name, icon_url = f"https://a.iteki.pw/{uid}")
+        embed.add_field(name = 'New frozen user', value = f'{user} has been frozen by {name} for {reason}.', inline = True)
+        webhook.add_embed(embed)
+        await webhook.post()
+        await ctx.send(f'{user} has been frozen!')
+
+        if discord is not None:
+            user = bot.get_user(discord)
+            try:
+                await user.send_message(f'Your Iteki account ({user}) has been frozen for {reason}! Please contact tsunyoku#8551 on Discord to be given a criteria you will be expected to liveplay to. You will be given 7 days to produce a liveplay or you will get autobanned.')
+            except:
+                print('Unable to message user, DMs are disabled.')
+    else:
+        return await ctx.send("You don't have permissions to do that!")
+
+@bot.command()
+async def unfreezeuser(ctx, user):
+    if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
+        if not user:
+            return await ctx.send('Please provide a username to unfreeze!')
+        
+        if not await check_link(ctx.author.id):
+            return await ctx.send('Your Discord is not linked to any Iteki account! Please do `!link` to link your Iteki account and try again.')
+
+        info = await get_info(ctx.author.id)
+        name = info[0]
+        uid = info[1]
+
+        info_ban = await get_info_name(user)
+        uid_ban = info_ban[0]
+        if await check_link_id(uid_ban) is not False:
+            discord = info_ban[1]
+        else:
+            discord = None
+
+        await db.execute(f'UPDATE users SET frozen = 0 WHERE id = {uid_ban}')
+        await db.execute(f'INSERT INTO logs (`from`, `to`, `msg`, `time`) VALUES ({uid}, {uid_ban}, "Unfrozen", NOW())')
+
+        webhook_url = glob.config.webhook
+        webhook = Webhook(url=webhook_url)
+        embed = Embed(title = f'')
+        embed.set_author(url = f"https://iteki.pw/u/{uid}", name = name, icon_url = f"https://a.iteki.pw/{uid}")
+        embed.add_field(name = 'New unfrozen user', value = f'{user} has been unfrozen by {name}.', inline = True)
+        webhook.add_embed(embed)
+        await webhook.post()
+        await ctx.send(f'{user} has been unfrozen!')
+
+        if discord is not None:
+            user = bot.get_user(discord)
+            try:
+                await user.send_message(f'Your Iteki account ({user}) has been unfrozen! Thank you for cooperating.')
             except:
                 print('Unable to message user, DMs are disabled.')
     else:
