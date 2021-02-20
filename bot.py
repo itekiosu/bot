@@ -153,22 +153,18 @@ async def purge(ctx, amount: int = 0):
         return await ctx.send("You don't have permissions to do that!")
 
 @bot.command()
-async def ban(ctx, reason: str = None):
+async def ban(ctx, member: discord.Member, reason=None):
     if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
-        user = ctx.message.mentions
-        for mention in user:
-            await mention.ban(reason=reason)
-            return await ctx.send('User has been banned!')
+        await member.ban(reason=reason)
+        await ctx.send('User has been banned!')
     else:
         return await ctx.send("You don't have permissions to do that!")
 
 @bot.command()
-async def unban(ctx, reason: str = None):
+async def unban(ctx, member: discord.Member, reason=None):
     if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
-        user = ctx.message.mentions
-        for mention in user:
-            await mention.unban(reason=reason)
-            return await ctx.send('User has been unbanned!')
+        await member.unban(reason=reason)
+        await ctx.send('User has been unbanned!')
     else:
         return await ctx.send("You don't have permissions to do that!")
 
