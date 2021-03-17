@@ -69,7 +69,7 @@ async def on_member_join(member):
 async def generate(ctx):
     if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
         key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
-        await db.execute(f'INSERT INTO beta_keys(beta_key, generated_by) VALUES ("{key}", "{ctx.author}")')
+        await db.execute(f'INSERT INTO beta_keys(beta_key, generated_by, for_id) VALUES ("{key}", "{ctx.author}", 0)')
         await ctx.message.delete()
         return await ctx.author.send(f'Key generated!\n\nKey: `{key}`')
     else:
@@ -82,7 +82,7 @@ async def accept(ctx):
         await ctx.message.delete()
         for user in mention:
             key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
-            await db.execute(f'INSERT INTO beta_keys(beta_key, generated_by) VALUES ("{key}", "{ctx.author}")')
+            await db.execute(f'INSERT INTO beta_keys(beta_key, generated_by, for_id) VALUES ("{key}", "{ctx.author}", {user.id})')
             await user.send(f'Key generated!\n\nKey: `{key}`')
             role = discord.utils.get(user.guild.roles, name=glob.config.beta_role)
             return await user.add_roles(role)
@@ -137,6 +137,15 @@ async def link(ctx):
         return await ctx.send(f'You have already started the linking process, but have not finished it! Please check your DMs with me on Discord and follow the instructions to finish the linking process.')
     else:
         return await ctx.send("Your Discord is already linked to an Iteki account! If you think this is in error, please DM @tsunyoku#8551 on Discord.")
+
+@bot.command()
+async def reg(ctx, code):
+    checkc = await db.fetch('SELECT id, name FROM users WHERE code = %s', [code])
+    if checkc is not None:
+        await db.execute('UPDATE users SET verif = 1 WHERE id = %s', [checkc['id']])
+        return await ctx.send(f"Thank you {checkc['name']} for verifying your account! Please attempt to login again.")
+    else:
+        return await ctx.send('Invalid code! Please double check the code and try again.')
 
 @bot.command()
 async def purge(ctx, amount: int = 0):
