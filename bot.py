@@ -96,9 +96,13 @@ async def accept(ctx):
 async def restart(ctx):
     if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
         await ctx.send('Restarting gulag!')
-        pid = subprocess.check_output(["pgrep","gulag"])
-        os.kill(int(pid), signal.SIGUSR1)
-        return await ctx.send('gulag restarted!')
+        gpid = subprocess.check_output(["pgrep","gulag"])
+        os.kill(int(gpid), signal.SIGUSR1)
+        await ctx.send('gulag restarted!')
+        await ctx.send('Restarting gulag-web!')
+        gwpid = subprocess.check_output(["pgrep","gulag-web"])
+        os.kill(int(gwpid), signal.SIGUSR1)
+        return await ctx.send('gulag-web restarted!')
     else:
         return await ctx.send("You don't have permissions to do that!")
 
