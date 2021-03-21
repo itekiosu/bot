@@ -10,6 +10,9 @@ import random
 import string
 import aiohttp
 import aiofiles
+import signal
+import os
+import subprocess
 from resizeimage import resizeimage
 from datetime import datetime, timedelta
 
@@ -88,6 +91,14 @@ async def accept(ctx):
             return await user.add_roles(role)
     else:
         return await ctx.send("You don't have permissions to do that!")
+
+@bot.command()
+async def restart(ctx):
+    if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
+        await ctx.send('Restarting gulag!')
+        pid = subprocess.check_output(["pgrep","gulag"])
+        os.kill(int(pid), signal.SIGUSR1)
+        return await ctx.send('gulag restarted!')
 
 @bot.command()
 async def avatar(ctx, url: str = None):
