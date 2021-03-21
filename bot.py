@@ -99,6 +99,8 @@ async def restart(ctx):
         pid = subprocess.check_output(["pgrep","gulag"])
         os.kill(int(pid), signal.SIGUSR1)
         return await ctx.send('gulag restarted!')
+    else:
+        return await ctx.send("You don't have permissions to do that!")
 
 @bot.command()
 async def avatar(ctx, url: str = None):
