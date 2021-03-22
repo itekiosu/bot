@@ -98,47 +98,51 @@ async def restart(ctx):
         await ctx.send('Restarting gulag!')
         gpid = subprocess.check_output(["pgrep","gulag"])
         os.kill(int(gpid), signal.SIGUSR1)
-        await ctx.send('gulag restarted!')
-        await ctx.send('Restarting gulag-web!')
-        gwpid = subprocess.check_output(["pgrep","gulag-web"])
-        os.kill(int(gwpid), signal.SIGUSR1)
-        return await ctx.send('gulag-web restarted!')
+        return await ctx.send('gulag restarted!')
+
+        # gulag-web doesnt work like this im retarded
+        #await ctx.send('Restarting gulag-web!')
+        #gwpid = subprocess.check_output(["pgrep","gulag-web"])
+        #os.kill(int(gwpid), signal.SIGUSR1)
+        #return await ctx.send('gulag-web restarted!')
     else:
         return await ctx.send("You don't have permissions to do that!")
 
 @bot.command()
 async def avatar(ctx, url: str = None):
-    if url is None:
-        try:
-            url = ctx.message.attachments[0].url
-        except:
-            return await ctx.send('Please ensure you provide either an image by URL or file upload! (Syntax: `!avatar <url if you are not using image upload>`)')
-    if await check_link(ctx.author.id) is not False:
-        a = await db.fetch(f'SELECT user FROM discord WHERE tag_id = {ctx.author.id}')
-        uid = a['user']
-    elif await check_link(ctx.author.id) == 1:
-        return await ctx.send('You have already started the linking process, but have not finished it! Please check your DMs with me on Discord and follow the instructions to finish the linking process.')
-    else:
-        return await ctx.send('Your Discord is not linked to any Iteki account! Please do `!link` to link your Iteki account and try again.')
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(url) as res:
-                if res.status == 200:
-                    file = await aiofiles.open(f'/home/iteki/gulag/.data/avatars/{uid}.png', 'wb')
-                    await file.write(await res.read())
-                    await file.close()
-                    img = Image.open(f'/home/iteki/gulag/.data/avatars/{uid}.png')
-                    width, height = img.size
-                    if width > 256 or height > 256:
-                        new = resizeimage.resize_cover(img, [256, 256])
-                        new.save(f'/home/iteki/gulag/.data/avatars/{uid}.png', img.format)
-                    e = await db.fetch(f'SELECT name FROM users WHERE id = {uid}')
-                    uname = e['name']
-                    return await ctx.send(f'Ok **{uname}**, your avatar has been changed! Please restart your game for it to update.')
-                else:
-                    return await ctx.send(f'Error getting image! If you provided a URL, please ensure that anyone has the permission to view this image and that the URL exists.')
-        except:
-            return await ctx.send(f'Error getting image! If you provided a URL, please ensure that anyone has the permission to view this image and that the URL exists.')
+    await ctx.message.delete()
+    return await ctx.author.send("Please change your avatar on the website's settings instead!")
+    # if url is None:
+    #     try:
+    #         url = ctx.message.attachments[0].url
+    #     except:
+    #         return await ctx.send('Please ensure you provide either an image by URL or file upload! (Syntax: `!avatar <url if you are not using image upload>`)')
+    # if await check_link(ctx.author.id) is not False:
+    #     a = await db.fetch(f'SELECT user FROM discord WHERE tag_id = {ctx.author.id}')
+    #     uid = a['user']
+    # elif await check_link(ctx.author.id) == 1:
+    #     return await ctx.send('You have already started the linking process, but have not finished it! Please check your DMs with me on Discord and follow the instructions to finish the linking process.')
+    # else:
+    #     return await ctx.send('Your Discord is not linked to any Iteki account! Please do `!link` to link your Iteki account and try again.')
+    # async with aiohttp.ClientSession() as session:
+    #     try:
+    #         async with session.get(url) as res:
+    #             if res.status == 200:
+    #                 file = await aiofiles.open(f'/home/iteki/gulag/.data/avatars/{uid}.png', 'wb')
+    #                 await file.write(await res.read())
+    #                 await file.close()
+    #                 img = Image.open(f'/home/iteki/gulag/.data/avatars/{uid}.png')
+    #                 width, height = img.size
+    #                 if width > 256 or height > 256:
+    #                     new = resizeimage.resize_cover(img, [256, 256])
+    #                     new.save(f'/home/iteki/gulag/.data/avatars/{uid}.png', img.format)
+    #                 e = await db.fetch(f'SELECT name FROM users WHERE id = {uid}')
+    #                 uname = e['name']
+    #                 return await ctx.send(f'Ok **{uname}**, your avatar has been changed! Please restart your game for it to update.')
+    #             else:
+    #                 return await ctx.send(f'Error getting image! If you provided a URL, please ensure that anyone has the permission to view this image and that the URL exists.')
+    #     except:
+    #         return await ctx.send(f'Error getting image! If you provided a URL, please ensure that anyone has the permission to view this image and that the URL exists.')
 
 @bot.command()
 async def link(ctx):
