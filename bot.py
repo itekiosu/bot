@@ -96,7 +96,7 @@ async def accept(ctx):
 async def restart(ctx):
     if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
         await ctx.send('Restarting gulag!')
-        gpid = subprocess.check_output(["pgrep","gulag"])
+        gpid = subprocess.check_output(["pgrep","itekiserv"])
         os.kill(int(gpid), signal.SIGUSR1)
         return await ctx.send('gulag restarted!')
 
@@ -393,5 +393,11 @@ async def minecraft(ctx):
         role = discord.utils.get(ctx.author.guild.roles, name=glob.config.mc_role)
         await ctx.author.add_roles(role)
         return await ctx.send('You now have the Minecraft role! You should be able to see the Minecraft section and you will now receive pings about the server.')
+
+@bot.command()
+async def cheat(ctx):
+        role = discord.utils.get(ctx.author.guild.roles, name=glob.config.ic_role)
+        await ctx.author.add_roles(role)
+        return await ctx.send('You now have the Cheater role! You should be able to see the Cheater section and you will now receive pings about the cheat server.')
 
 bot.run(glob.config.token)
