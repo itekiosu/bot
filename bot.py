@@ -272,6 +272,27 @@ async def givebadge(ctx, user, badge):
                 return await ctx.send(f'User already has this badge!')
 
 @bot.command()
+async def addbadge(ctx, name, hexc, icon):
+    if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
+        color = f'color: {hexc};'
+        badge = await db.fetch(f'SELECT 1 FROM badges WHERE name = "{name.upper()}"')
+
+        if hexc[0] != "#":
+            return await ctx.send('Please use a hex code for the badge colour!')
+        
+        if not name:
+            return await ctx.send('You must provide a badge name!')
+
+        if not icon:
+            return await ctx.send('You must provide a badge icon!')
+
+        if not badge:
+            await db.execute(f'INSERT INTO badges (name, colour, icon) VALUES ("{name}", "{color}", "{icon}")')
+            await ctx.send(f'Badge {name} created')
+        else:
+            return await ctx.send('A badge with this name already exists!')
+
+@bot.command()
 async def unbanuser(ctx, user, reason):
     if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
         if not user:
