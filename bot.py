@@ -78,6 +78,7 @@ async def generate(ctx):
     else:
         return await ctx.send("You don't have permissions to do that!")
 
+
 @bot.command()
 async def accept(ctx):
     if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
@@ -251,6 +252,24 @@ async def banuser(ctx, user, reason):
                 print('Unable to message user, DMs are disabled.')
     else:
         return await ctx.send("You don't have permissions to do that!")
+
+@bot.command()
+async def givebadge(ctx, user, badge):
+    if ctx.author.top_role.id in (glob.config.admin_role_id, glob.config.dev_role_id, glob.config.owner_role_id):
+        badge = await db.fetch(f'SELECT id FROM badges WHERE name = "{badge.upper()}"')
+        badge_id = badge['id']
+        info = await get_info_name(user)
+        uid = info[0]
+        
+        if not badge:
+            return await ctx.send('You must provide a badge name!')
+        else:
+            check = await db.fetch(f'SELECT 1 FROM user_badges WHERE badgeid = "{badge_id}" AND userid = {uid}')
+            if not check:
+                await db.execute(f'INSERT INTO user_badges(`userid`, `badgeid`) VALUES ({uid}, "{badge_id}")')
+                await ctx.send(f'Badge given!')
+            else:
+                return await ctx.send(f'User already has this badge!')
 
 @bot.command()
 async def unbanuser(ctx, user, reason):
