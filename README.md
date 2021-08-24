@@ -1,4 +1,4 @@
-# bot
+# NOTE: Iteki doesn't use this anymore!
 
 Discord bot used on Iteki to manage the server.
 
